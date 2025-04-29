@@ -8,7 +8,6 @@ export default function Home() {
 
   
   if (session) {
-  
     return (
       <>
         <p>Welcome {session.user?.name}. Signed In As</p>
