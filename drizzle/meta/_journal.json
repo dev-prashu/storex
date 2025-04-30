@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1746005130389,
-      "tag": "0000_flaky_dagger",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1746015018486,
-      "tag": "0001_foamy_old_lace",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1746017407826,
-      "tag": "0002_stale_changeling",
+      "when": 1746019536691,
+      "tag": "0000_milky_photon",
       "breakpoints": true
     }
   ]
