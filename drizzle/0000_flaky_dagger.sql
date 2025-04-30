@@ -12,6 +12,20 @@ CREATE TABLE "accessories_specifications" (
 	"remark" text
 );
 --> statement-breakpoint
+CREATE TABLE "accounts" (
+	"userId" text NOT NULL,
+	"type" text NOT NULL,
+	"provider" text NOT NULL,
+	"providerAccountId" text NOT NULL,
+	"refresh_token" text,
+	"access_token" text,
+	"expires_at" integer,
+	"token_type" text,
+	"scope" text,
+	"id_token" text,
+	"session_state" text
+);
+--> statement-breakpoint
 CREATE TABLE "asset_assignment" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"asset_id" uuid NOT NULL,
@@ -60,7 +74,7 @@ CREATE TABLE "assets" (
 	"delete_reason" text
 );
 --> statement-breakpoint
-CREATE TABLE "authenticated_users" (
+CREATE TABLE "authorized_users" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"email" text NOT NULL,
 	"added_by_id" uuid,
@@ -68,7 +82,7 @@ CREATE TABLE "authenticated_users" (
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"deleted_at" timestamp,
 	"deleted_by_id" uuid,
-	CONSTRAINT "authenticated_users_email_unique" UNIQUE("email")
+	CONSTRAINT "authorized_users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
 CREATE TABLE "employees" (
@@ -134,6 +148,12 @@ CREATE TABLE "ram_specifications" (
 	"remark" text
 );
 --> statement-breakpoint
+CREATE TABLE "sessions" (
+	"sessionToken" text PRIMARY KEY NOT NULL,
+	"userId" text NOT NULL,
+	"expires" timestamp NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "sim_specifications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"asset_id" uuid NOT NULL,
@@ -141,20 +161,37 @@ CREATE TABLE "sim_specifications" (
 	"phone_no" numeric(10, 0) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "users" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text,
+	"email" text,
+	"emailVerified" timestamp,
+	"image" text,
+	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "verificationTokens" (
+	"identifier" text NOT NULL,
+	"token" text NOT NULL,
+	"expires" timestamp NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "accessories_specifications" ADD CONSTRAINT "accessories_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "asset_assignment" ADD CONSTRAINT "asset_assignment_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "asset_assignment" ADD CONSTRAINT "asset_assignment_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "asset_assignment" ADD CONSTRAINT "asset_assignment_assigned_by_id_authenticated_users_id_fk" FOREIGN KEY ("assigned_by_id") REFERENCES "public"."authenticated_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "asset_assignment" ADD CONSTRAINT "asset_assignment_assigned_by_id_authorized_users_id_fk" FOREIGN KEY ("assigned_by_id") REFERENCES "public"."authorized_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "asset_service" ADD CONSTRAINT "asset_service_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "asset_service" ADD CONSTRAINT "asset_service_sent_by_authenticated_users_id_fk" FOREIGN KEY ("sent_by") REFERENCES "public"."authenticated_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "assets" ADD CONSTRAINT "assets_created_by_authenticated_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."authenticated_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "assets" ADD CONSTRAINT "assets_deleted_by_authenticated_users_id_fk" FOREIGN KEY ("deleted_by") REFERENCES "public"."authenticated_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "employees" ADD CONSTRAINT "employees_created_by_id_authenticated_users_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."authenticated_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "employees" ADD CONSTRAINT "employees_deleted_by_id_authenticated_users_id_fk" FOREIGN KEY ("deleted_by_id") REFERENCES "public"."authenticated_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "asset_service" ADD CONSTRAINT "asset_service_sent_by_authorized_users_id_fk" FOREIGN KEY ("sent_by") REFERENCES "public"."authorized_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "assets" ADD CONSTRAINT "assets_created_by_authorized_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."authorized_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "assets" ADD CONSTRAINT "assets_deleted_by_authorized_users_id_fk" FOREIGN KEY ("deleted_by") REFERENCES "public"."authorized_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "employees" ADD CONSTRAINT "employees_created_by_id_authorized_users_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."authorized_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "employees" ADD CONSTRAINT "employees_deleted_by_id_authorized_users_id_fk" FOREIGN KEY ("deleted_by_id") REFERENCES "public"."authorized_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "hard_disk_specifications" ADD CONSTRAINT "hard_disk_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "laptop_specifications" ADD CONSTRAINT "laptop_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "mobile_specifications" ADD CONSTRAINT "mobile_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "monitor_specifications" ADD CONSTRAINT "monitor_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "pendrive_specifications" ADD CONSTRAINT "pendrive_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ram_specifications" ADD CONSTRAINT "ram_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sim_specifications" ADD CONSTRAINT "sim_specifications_asset_id_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("id") ON DELETE no action ON UPDATE no action;

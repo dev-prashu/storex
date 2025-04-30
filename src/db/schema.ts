@@ -56,7 +56,7 @@ export const accessoryTypeEnum = pgEnum("accessory_type", [
   "other",
 ]);
 
-export const users = pgTable("user", {
+export const users = pgTable("users", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -67,7 +67,7 @@ export const users = pgTable("user", {
 });
 
 export const accounts = pgTable(
-  "account",
+  "accounts",
   {
     userId: text("userId")
       .notNull()
@@ -92,7 +92,7 @@ export const accounts = pgTable(
   ]
 );
 
-export const sessions = pgTable("session", {
+export const sessions = pgTable("sessions", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
@@ -101,7 +101,7 @@ export const sessions = pgTable("session", {
 });
 
 export const verificationTokens = pgTable(
-  "verificationToken",
+  "verificationTokens",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
@@ -116,30 +116,7 @@ export const verificationTokens = pgTable(
   ]
 );
 
-export const authenticators = pgTable(
-  "authenticator",
-  {
-    credentialID: text("credentialID").notNull().unique(),
-    userId: text("userId")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    providerAccountId: text("providerAccountId").notNull(),
-    credentialPublicKey: text("credentialPublicKey").notNull(),
-    counter: integer("counter").notNull(),
-    credentialDeviceType: text("credentialDeviceType").notNull(),
-    credentialBackedUp: boolean("credentialBackedUp").notNull(),
-    transports: text("transports"),
-  },
-  (authenticator) => [
-    {
-      compositePK: primaryKey({
-        columns: [authenticator.userId, authenticator.credentialID],
-      }),
-    },
-  ]
-);
-
-export const authenticatedUsers = pgTable("authenticated_users", {
+export const authorizedUsers = pgTable("authorized_users", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -151,16 +128,16 @@ export const authenticatedUsers = pgTable("authenticated_users", {
   deletedById: uuid("deleted_by_id"),
 });
 
-export const authenticatedUserRelations = relations(
-  authenticatedUsers,
+export const authorizedUserRelations = relations(
+  authorizedUsers,
   ({ one }) => ({
-    addedBy: one(authenticatedUsers, {
-      fields: [authenticatedUsers.addedById],
-      references: [authenticatedUsers.id],
+    addedBy: one(authorizedUsers, {
+      fields: [authorizedUsers.addedById],
+      references: [authorizedUsers.id],
     }),
-    deletedBy: one(authenticatedUsers, {
-      fields: [authenticatedUsers.deletedById],
-      references: [authenticatedUsers.id],
+    deletedBy: one(authorizedUsers, {
+      fields: [authorizedUsers.deletedById],
+      references: [authorizedUsers.id],
     }),
   })
 );
@@ -175,10 +152,10 @@ export const employees = pgTable("employees", {
   status: employeeStatusEnum("status").notNull().default("active"),
   employeeType: employeeTypeEnum("employee_type").notNull().default("fresher"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  createdById: uuid("created_by_id").references(() => authenticatedUsers.id),
+  createdById: uuid("created_by_id").references(() => authorizedUsers.id),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-  deletedById: uuid("deleted_by_id").references(() => authenticatedUsers.id),
+  deletedById: uuid("deleted_by_id").references(() => authorizedUsers.id),
   deleteReason: text("delete_reason"),
 });
 
@@ -197,10 +174,10 @@ export const assets = pgTable("assets", {
   clientName: text("client_name"),
   asset_pic: text("asset_pic"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  createdBy: uuid("created_by").references(() => authenticatedUsers.id),
+  createdBy: uuid("created_by").references(() => authorizedUsers.id),
   updatedAt: timestamp("updated_at"),
   deletedAt: timestamp("deleted_at"),
-  deletedBy: uuid("deleted_by").references(() => authenticatedUsers.id),
+  deletedBy: uuid("deleted_by").references(() => authorizedUsers.id),
   deleteReason: text("delete_reason"),
 });
 
@@ -210,7 +187,7 @@ export const assetAssignment = pgTable("asset_assignment", {
     .notNull()
     .references(() => assets.id),
   employeeId: uuid("employee_id").references(() => employees.id),
-  assignedById: uuid("assigned_by_id").references(() => authenticatedUsers.id),
+  assignedById: uuid("assigned_by_id").references(() => authorizedUsers.id),
   assignedOn: date("assigned_date"),
   returnedOn: date("returned_on"),
   returnReason: text("return_reason"),
@@ -223,7 +200,7 @@ export const assetService = pgTable("asset_service", {
   assetId: uuid("asset_id")
     .notNull()
     .references(() => assets.id),
-  sentBy: uuid("sent_by").references(() => authenticatedUsers.id),
+  sentBy: uuid("sent_by").references(() => authorizedUsers.id),
   serviceReason: text("service_reason"),
   sentOn: timestamp("sent_on"),
   receivedOn: timestamp("received_on"),

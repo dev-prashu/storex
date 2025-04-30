@@ -1,26 +1,19 @@
 import { db } from "@/db";
-import {
-  accounts,
-  authenticatedUsers,
-  sessions,
-  users,
-  verificationTokens,
-} from "@/db/schema";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { authorizedUsers } from "@/db/schema";
+
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
 
 import GoogleProvider from "next-auth/providers/google";
+import { DrizzleAdapter } from "./lib/drizzle-adapter";
 
-
-export const {handlers:{GET,POST},signIn,signOut,auth} = NextAuth({
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
-
+export const {
+  handlers: { GET, POST },
+  signIn,
+  signOut,
+  auth,
+} = NextAuth({
+  adapter: DrizzleAdapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -36,16 +29,14 @@ export const {handlers:{GET,POST},signIn,signOut,auth} = NextAuth({
       try {
         const existingUser = await db
           .select()
-          .from(authenticatedUsers)
-          .where(eq(authenticatedUsers.email, user.email))
+          .from(authorizedUsers)
+          .where(eq(authorizedUsers.email, user.email))
           .execute();
 
-          
-        
-          if(existingUser.length==0){
-            return false
-          }
-          return true;
+        if (existingUser.length == 0) {
+          return false;
+        }
+        return true;
       } catch (e) {
         console.log(e);
         return false;
@@ -53,13 +44,11 @@ export const {handlers:{GET,POST},signIn,signOut,auth} = NextAuth({
     },
     async session({ session }) {
       return session;
-    }
+    },
   },
- 
+
   pages: {
     signIn: "/login",
     error: "/login",
   },
 });
-
-
