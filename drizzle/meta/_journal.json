@@ -8,6 +8,13 @@
       "when": 1745909080473,
       "tag": "0000_petite_plazm",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1745922462225,
+      "tag": "0001_huge_legion",
+      "breakpoints": true
     }
   ]
 }
