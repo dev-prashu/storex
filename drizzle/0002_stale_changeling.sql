@@ -1,0 +1,1 @@
+ALTER TABLE "employees" ADD COLUMN "asset_status" "employee_asset_status" DEFAULT 'unassigned' NOT NULL;

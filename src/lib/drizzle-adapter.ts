@@ -160,39 +160,6 @@ import {
       }
     },
   
-    // async listAuthenticatorsByUserId(userId: string) {
-    //   return await db
-    //     .select()
-    //     .from(authenticators)
-    //     .where(eq(authenticators.userId, userId));
-    // },
-  
-    // async getAuthenticator(credentialID: string) {
-    //   const [authenticator] = await db
-    //     .select()
-    //     .from(authenticators)
-    //     .where(eq(authenticators.credentialID, credentialID));
-  
-    //   return authenticator ?? null;
-    // },
-  
-    // async updateAuthenticatorCounter(credentialID: string, counter: number) {
-    //   const [authenticator] = await db
-    //     .update(authenticators)
-    //     .set({ counter })
-    //     .where(eq(authenticators.credentialID, credentialID))
-    //     .returning();
-  
-    //   return authenticator ?? null;
-    // },
-  
-    // async createAuthenticator(data) {
-    //   const [authenticator] = await db
-    //     .insert(authenticators)
-    //     .values(data)
-    //     .returning();
-  
-    //   return authenticator ?? null;
-    // },
+ 
   };
   

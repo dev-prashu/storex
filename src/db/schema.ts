@@ -1,6 +1,6 @@
 import { AdapterAccountType } from "@auth/core/adapters";
 import { relations } from "drizzle-orm";
-import { date, pgEnum, uuid } from "drizzle-orm/pg-core";
+import { date, pgEnum, uuid, varchar } from "drizzle-orm/pg-core";
 import {
   boolean,
   timestamp,
@@ -148,11 +148,12 @@ export const employees = pgTable("employees", {
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  phone_: numeric("phone_no").notNull(),
+  phone: varchar("phone_no",{length: 15}).notNull(),
   status: employeeStatusEnum("status").notNull().default("active"),
   employeeType: employeeTypeEnum("employee_type").notNull().default("fresher"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   createdById: uuid("created_by_id").references(() => authorizedUsers.id),
+  assetStatus: employeeAssetStatusEnum("asset_status").notNull().default("unassigned"),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
   deletedById: uuid("deleted_by_id").references(() => authorizedUsers.id),

@@ -49,6 +49,6 @@ export const {
 
   pages: {
     signIn: "/login",
-    error: "/login",
+    
   },
 });
