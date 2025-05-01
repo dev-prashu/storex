@@ -1,16 +1,40 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { authorizedUsers, employees } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { assetAssignment, employees } from "@/db/schema";
+import { count, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export const GET = auth(async function (req) {
   if (!req.auth)
     return NextResponse.json({ message: "Not Authorized" }, { status: 401 });
-  try {
-    const employee = await db.select().from(employees).execute();
 
-    return NextResponse.json({ employees: employee }, { status: 200 });
+  // console.log(req.auth);
+  try {
+    const allEmployees = await db
+      .select()
+      .from(employees)
+      .where(isNull(employees.deletedAt));
+
+    const assetCounts = await db
+      .select({
+        employeeId: employees.id,
+        count: count(assetAssignment.id).as("count"),
+      })
+      .from(employees)
+      .leftJoin(assetAssignment, eq(employees.id, assetAssignment.employeeId))
+      .where(isNull(assetAssignment.returnedOn))
+      .groupBy(employees.id);
+
+    const assetMap = new Map(
+      assetCounts.map((row) => [row.employeeId, row.count])
+    );
+
+    const enrichedEmployees = allEmployees.map((emp) => ({
+      ...emp,
+      assetCount: assetMap.get(emp.id) ?? 0,
+    }));
+
+    return NextResponse.json({ employees: enrichedEmployees }, { status: 200 });
   } catch (e) {
     console.error(e);
     return NextResponse.json(
@@ -21,8 +45,8 @@ export const GET = auth(async function (req) {
 });
 
 export const POST = auth(async function (req) {
-  const session=req.auth;
-  console.log("session",session);
+  const session = req.auth;
+  console.log("session", session);
   if (!req.auth) {
     return NextResponse.json({ message: "Not Authorized" }, { status: 401 });
   }
@@ -37,10 +61,6 @@ export const POST = auth(async function (req) {
       );
     }
 
-    const authorisedUserId = await db.select({ id: authorizedUsers.id })
-      .from(authorizedUsers)
-      .where(eq(authorizedUsers.email, session!.user?.email ?? ''))
-      .execute();
     await db
       .insert(employees)
       .values({
@@ -49,10 +69,10 @@ export const POST = auth(async function (req) {
         phone,
         status,
         employeeType,
-        createdById:authorisedUserId[0].id
+        createdById: session!.user?.id,
       })
       .execute();
-    return NextResponse.json({ message: "Employee created" }, { status: 201 });  
+    return NextResponse.json({ message: "Employee created" }, { status: 201 });
   } catch (e) {
     console.log(e);
     return NextResponse.json(
@@ -61,4 +81,3 @@ export const POST = auth(async function (req) {
     );
   }
 });
-

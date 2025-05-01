@@ -1,5 +1,4 @@
 import { AdapterAccountType } from "@auth/core/adapters";
-import { relations } from "drizzle-orm";
 import { date, pgEnum, uuid, varchar } from "drizzle-orm/pg-core";
 import {
   boolean,
@@ -56,8 +55,9 @@ export const accessoryTypeEnum = pgEnum("accessory_type", [
   "other",
 ]);
 
+
 export const users = pgTable("users", {
-  id: text("id")
+  id: uuid("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
@@ -69,7 +69,7 @@ export const users = pgTable("users", {
 export const accounts = pgTable(
   "accounts",
   {
-    userId: text("userId")
+    userId: uuid("userId") // changed from text -> uuid
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: text("type").$type<AdapterAccountType>().notNull(),
@@ -94,7 +94,7 @@ export const accounts = pgTable(
 
 export const sessions = pgTable("sessions", {
   sessionToken: text("sessionToken").primaryKey(),
-  userId: text("userId")
+  userId: uuid("userId") // changed from text -> uuid
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
@@ -121,26 +121,26 @@ export const authorizedUsers = pgTable("authorized_users", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   email: text("email").notNull().unique(),
-  addedById: uuid("added_by_id"),
+  addedById: uuid("added_by").references(()=>users.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-  deletedById: uuid("deleted_by_id"),
+  deletedById: uuid("deleted_by").references(()=>users.id),
 });
 
-export const authorizedUserRelations = relations(
-  authorizedUsers,
-  ({ one }) => ({
-    addedBy: one(authorizedUsers, {
-      fields: [authorizedUsers.addedById],
-      references: [authorizedUsers.id],
-    }),
-    deletedBy: one(authorizedUsers, {
-      fields: [authorizedUsers.deletedById],
-      references: [authorizedUsers.id],
-    }),
-  })
-);
+// export const authorizedUserRelations = relations(
+//   authorizedUsers,
+//   ({ one }) => ({
+//     addedBy: one(authorizedUsers, {
+//       fields: [authorizedUsers.addedById],
+//       references: [authorizedUsers.id],
+//     }),
+//     deletedBy: one(authorizedUsers, {
+//       fields: [authorizedUsers.deletedById],
+//       references: [authorizedUsers.id],
+//     }),
+//   })
+// );
 
 export const employees = pgTable("employees", {
   id: uuid("id")
@@ -152,11 +152,11 @@ export const employees = pgTable("employees", {
   status: employeeStatusEnum("status").notNull().default("active"),
   employeeType: employeeTypeEnum("employee_type").notNull().default("fresher"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  createdById: uuid("created_by_id").references(() => authorizedUsers.id),
+  createdById: uuid("created_by_id").references(() => users.id),
   assetStatus: employeeAssetStatusEnum("asset_status").notNull().default("unassigned"),
   updatedAt: timestamp("updated_at").defaultNow(),
   deletedAt: timestamp("deleted_at"),
-  deletedById: uuid("deleted_by_id").references(() => authorizedUsers.id),
+  deletedById: uuid("deleted_by_id").references(() => users.id),
   deleteReason: text("delete_reason"),
 });
 
@@ -175,10 +175,10 @@ export const assets = pgTable("assets", {
   clientName: text("client_name"),
   asset_pic: text("asset_pic"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  createdBy: uuid("created_by").references(() => authorizedUsers.id),
+  createdBy: uuid("created_by").references(() => users.id),
   updatedAt: timestamp("updated_at"),
   deletedAt: timestamp("deleted_at"),
-  deletedBy: uuid("deleted_by").references(() => authorizedUsers.id),
+  deletedBy: uuid("deleted_by").references(() => users.id),
   deleteReason: text("delete_reason"),
 });
 
@@ -188,7 +188,7 @@ export const assetAssignment = pgTable("asset_assignment", {
     .notNull()
     .references(() => assets.id),
   employeeId: uuid("employee_id").references(() => employees.id),
-  assignedById: uuid("assigned_by_id").references(() => authorizedUsers.id),
+  assignedById: uuid("assigned_by_id").references(() => users.id),
   assignedOn: date("assigned_date"),
   returnedOn: date("returned_on"),
   returnReason: text("return_reason"),
@@ -201,7 +201,7 @@ export const assetService = pgTable("asset_service", {
   assetId: uuid("asset_id")
     .notNull()
     .references(() => assets.id),
-  sentBy: uuid("sent_by").references(() => authorizedUsers.id),
+  sentBy: uuid("sent_by").references(() => users.id),
   serviceReason: text("service_reason"),
   sentOn: timestamp("sent_on"),
   receivedOn: timestamp("received_on"),

@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { authorizedUsers } from "@/db/schema";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import NextAuth from "next-auth";
 
 import GoogleProvider from "next-auth/providers/google";
@@ -30,7 +30,12 @@ export const {
         const existingUser = await db
           .select()
           .from(authorizedUsers)
-          .where(eq(authorizedUsers.email, user.email))
+          .where(
+            and(
+              eq(authorizedUsers.email, user.email),
+              isNull(authorizedUsers.deletedAt)
+            )
+          )
           .execute();
 
         if (existingUser.length == 0) {
@@ -49,6 +54,5 @@ export const {
 
   pages: {
     signIn: "/login",
-    
   },
 });

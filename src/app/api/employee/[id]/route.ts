@@ -43,18 +43,21 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
     const { name, email, phone, status, employeeType } = body;
+
     if (!name || !email || !phone || !status || !employeeType) {
       return NextResponse.json(
         { message: "All fields are required" },
         { status: 400 }
       );
     }
+
     const existingId = await db
       .select({ id: employees.id })
       .from(employees)
       .where(eq(employees.email, email))
       .execute();
-    if (id != existingId[0].id) {
+
+    if (existingId.length > 0 && id != existingId[0].id) {
       return NextResponse.json(
         { message: "Employee Email Id Already exists" },
         { status: 400 }
@@ -62,7 +65,7 @@ export async function PATCH(
     }
     await db
       .update(employees)
-      .set({ name, email, phone, status, employeeType })
+      .set({ name, email, phone, status, employeeType, updatedAt: sql`now()` })
       .where(eq(employees.id, id))
       .execute();
     return NextResponse.json(
@@ -101,9 +104,10 @@ export async function DELETE(
     }
     await db
       .update(employees)
-      .set({ deletedAt: sql`now()` })
+      .set({ deletedAt: sql`now()`, deletedById: session.user?.id })
       .where(eq(employees.id, id))
       .execute();
+
     return NextResponse.json(
       { message: "Employee Deleted Successfully" },
       { status: 200 }
