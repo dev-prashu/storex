@@ -10,11 +10,12 @@ export const GET = auth(async function (req) {
   }
 
   try {
-    const allUsers = await db
+    const users = await db
       .select()
       .from(authorizedUsers)
       .where(isNull(authorizedUsers.deletedAt));
-    return NextResponse.json({ authorizedUsers: allUsers }, { status: 200 });
+
+    return NextResponse.json({ authorizedUsers: users }, { status: 200 });
   } catch (e) {
     console.log(e);
     return NextResponse.json(

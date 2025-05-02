@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { assetAssignment, employees } from "@/db/schema";
+import { assetAssignment, assets, employees } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -19,9 +19,26 @@ export async function GET(
       .select()
       .from(employees)
       .where(eq(employees.id, id))
-      .execute();
+      .execute()
+      .then((rows) => rows[0]);
 
-    return NextResponse.json({ employee: employee }, { status: 200 });
+    if (!employee) {
+      return NextResponse.json(
+        { error: "Employee not found" },
+        { status: 404 }
+      );
+    }
+
+    const assignedAssets = await db
+      .select({ assets: assets })
+      .from(assetAssignment)
+      .innerJoin(assets, eq(assetAssignment.assetId, assets.id))
+      .where(eq(assetAssignment.employeeId, id));
+
+    return NextResponse.json(
+      { employee,  assignedAssets },
+      { status: 200 }
+    );
   } catch (e) {
     console.log(e);
     return NextResponse.json(
@@ -60,7 +77,7 @@ export async function PATCH(
     if (existingId.length > 0 && id != existingId[0].id) {
       return NextResponse.json(
         { message: "Employee Email Id Already exists" },
-        { status: 400 }
+        { status: 409 }
       );
     }
     await db
@@ -104,7 +121,11 @@ export async function DELETE(
     }
     await db
       .update(employees)
-      .set({ deletedAt: sql`now()`, deletedById: session.user?.id })
+      .set({
+        deletedAt: sql`now()`,
+        deletedById: session.user?.id,
+        status: "deleted",
+      })
       .where(eq(employees.id, id))
       .execute();
 

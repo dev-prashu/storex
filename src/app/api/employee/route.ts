@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { assetAssignment, employees } from "@/db/schema";
-import { count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export const GET = auth(async function (req) {
@@ -61,6 +61,18 @@ export const POST = auth(async function (req) {
       );
     }
 
+    const existingUser = await db
+      .select()
+      .from(employees)
+      .where(and(eq(employees.email, email), isNull(employees.deletedAt)))
+      .execute();
+
+    if (existingUser.length>0) {
+      return NextResponse.json(
+        { message: "Employee with this email id already exists" },
+        { status: 409 }
+      );
+    }
     await db
       .insert(employees)
       .values({

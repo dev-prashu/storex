@@ -173,7 +173,7 @@ export const assets = pgTable("assets", {
   isAvailable: boolean("is_available"),
   ownedBy: ownedByEnum("owned_by").default("remotestate"),
   clientName: text("client_name"),
-  asset_pic: text("asset_pic"),
+  assetPic: text("asset_pic"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: uuid("created_by").references(() => users.id),
   updatedAt: timestamp("updated_at"),
