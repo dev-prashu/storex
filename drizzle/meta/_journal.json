@@ -22,6 +22,20 @@
       "when": 1746689978996,
       "tag": "0002_first_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746695938669,
+      "tag": "0003_dark_wither",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1746696230796,
+      "tag": "0004_clumsy_carmella_unuscione",
+      "breakpoints": true
     }
   ]
 }

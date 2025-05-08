@@ -200,10 +200,11 @@ export const assetService = pgTable("asset_service", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id).unique(),
+    .references(() => assets.id),
   sentBy: uuid("sent_by").references(() => users.id),
   serviceReason: text("service_reason"),
   sentOn: timestamp("sent_on"),
+  image: text("image"),
   receivedOn: timestamp("received_on"),
   servicePrice: numeric("service_price"),
   remark: text("remark"),
