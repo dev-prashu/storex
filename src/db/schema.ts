@@ -186,7 +186,7 @@ export const assetAssignment = pgTable("asset_assignment", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   employeeId: uuid("employee_id").references(() => employees.id),
   assignedById: uuid("assigned_by_id").references(() => users.id),
   assignedOn: date("assigned_date"),
@@ -200,7 +200,7 @@ export const assetService = pgTable("asset_service", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   sentBy: uuid("sent_by").references(() => users.id),
   serviceReason: text("service_reason"),
   sentOn: timestamp("sent_on"),
@@ -216,7 +216,7 @@ export const hardDiskSpecs = pgTable("hard_disk_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   storage: text("storage"),
   type: text("type"),
 });
@@ -225,7 +225,7 @@ export const laptopSpecs = pgTable("laptop_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   series: text("series"),
   processor: text("processor"),
   ram: text("ram"),
@@ -239,7 +239,7 @@ export const mobileSpecs = pgTable("mobile_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   osType: text("os_type"),
   imei1: text("imei_1"),
   imei2: text("imei_2"),
@@ -250,7 +250,7 @@ export const monitorSpecs = pgTable("monitor_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   screenRes: text("screen_resolution"),
 });
 
@@ -258,7 +258,7 @@ export const pendriveSpecs = pgTable("pendrive_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   storage: text("storage"),
 });
 
@@ -266,7 +266,7 @@ export const simSpecs = pgTable("sim_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   simno: text("simno"),
   phone: numeric("phone_no", { precision: 10, scale: 0 }).notNull(),
 });
@@ -275,7 +275,7 @@ export const accessoriesSpecs = pgTable("accessories_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   type: accessoryTypeEnum("type").default("other"),
   remark: text("remark"),
 });
@@ -284,7 +284,7 @@ export const ramSpecs = pgTable("ram_specifications", {
   id: uuid("id").primaryKey().defaultRandom(),
   assetId: uuid("asset_id")
     .notNull()
-    .references(() => assets.id),
+    .references(() => assets.id).unique(),
   capacity: text("capacity"),
   remark: text("remark"),
 });

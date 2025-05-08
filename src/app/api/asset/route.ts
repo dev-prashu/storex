@@ -190,6 +190,20 @@ export const POST = auth(async function (req: Request) {
         });
         break;
       }
+      case "ram": {
+        if (!capacity) {
+          return NextResponse.json(
+            { message: "Capacity is missing" },
+            { status: 400 }
+          );
+        }
+        await db.insert(ramSpecs).values({
+          capacity,
+          assetId,
+          remark,
+        });
+        break;
+      }
       case "accessories": {
         if (!accessoryType) {
           return NextResponse.json(
@@ -198,20 +212,6 @@ export const POST = auth(async function (req: Request) {
           );
         }
         switch (accessoryType) {
-          case "ram": {
-            if (!capacity) {
-              return NextResponse.json(
-                { message: "Capacity is missing" },
-                { status: 400 }
-              );
-            }
-            await db.insert(ramSpecs).values({
-              capacity,
-              assetId,
-              remark,
-            });
-            break;
-          }
           case "cable":
           case "keyboard": {
             await db.insert(accessoriesSpecs).values({
