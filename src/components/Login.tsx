@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { FcGoogle } from "react-icons/fc";
 import { signIn, useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@mui/material";
 
 export default function Login() {
   const { status } = useSession();
@@ -41,11 +41,11 @@ export default function Login() {
           </div>
 
           <Button
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            variant="outlined"
             onClick={handleSignIn}
+            fullWidth
+            startIcon={<FcGoogle size={25} />}
           >
-            <FcGoogle className="text-lg" />
             Sign in with Google
           </Button>
         </div>

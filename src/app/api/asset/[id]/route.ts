@@ -114,16 +114,35 @@ export async function PATCH(
     }
 
     if (currentAsset.type !== type) {
-      await Promise.all([
-        db.delete(laptopSpecs).where(eq(laptopSpecs.assetId, id)),
-        db.delete(monitorSpecs).where(eq(monitorSpecs.assetId, id)),
-        db.delete(pendriveSpecs).where(eq(pendriveSpecs.assetId, id)),
-        db.delete(hardDiskSpecs).where(eq(hardDiskSpecs.assetId, id)),
-        db.delete(mobileSpecs).where(eq(mobileSpecs.assetId, id)),
-        db.delete(simSpecs).where(eq(simSpecs.assetId, id)),
-        db.delete(accessoriesSpecs).where(eq(accessoriesSpecs.assetId, id)),
-        db.delete(ramSpecs).where(eq(ramSpecs.assetId, id)),
-      ]);
+      switch (currentAsset.type) {
+        case "laptop":
+          await db.delete(laptopSpecs).where(eq(laptopSpecs.assetId, id));
+          break;
+        case "monitor":
+          await db.delete(monitorSpecs).where(eq(monitorSpecs.assetId, id));
+          break;
+        case "pendrive":
+          await db.delete(pendriveSpecs).where(eq(pendriveSpecs.assetId, id));
+          break;
+        case "hardisk":
+          await db.delete(hardDiskSpecs).where(eq(hardDiskSpecs.assetId, id));
+          break;
+        case "mobile":
+          await db.delete(mobileSpecs).where(eq(mobileSpecs.assetId, id));
+          break;
+        case "sim":
+          await db.delete(simSpecs).where(eq(simSpecs.assetId, id));
+          break;
+        case "ram":
+          await db.delete(ramSpecs).where(eq(ramSpecs.assetId, id));
+          break;
+        case "accessories":
+          await db
+            .delete(accessoriesSpecs)
+            .where(eq(accessoriesSpecs.assetId, id));
+          await db.delete(ramSpecs).where(eq(ramSpecs.assetId, id));
+          break;
+      }
     }
     switch (type) {
       case "laptop": {
@@ -372,6 +391,7 @@ export async function PATCH(
         assetPic,
         isAvailable,
         ownedBy,
+        updatedAt: sql`now()`,
         clientName: ownedBy === "client" ? clientName : null,
       })
       .where(eq(assets.id, id))
@@ -411,8 +431,9 @@ export async function DELETE(
     }
     await db
       .update(assets)
-      .set({ deletedAt: sql`now()` })
+      .set({ deletedAt: sql`now()`, status: "deleted" })
       .where(eq(assets.id, id));
+
     return NextResponse.json(
       { message: "Asset Deleted Successfully" },
       { status: 200 }

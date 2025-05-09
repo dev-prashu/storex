@@ -28,11 +28,11 @@ export async function POST(
     }
     await db.insert(assetService).values({
       serviceReason,
-      sentOn:new Date(sentOn),
+      sentOn: new Date(sentOn),
       image,
       createdAt: sql`now()`,
       assetId: id,
-      sentBy:session.user?.id,
+      sentBy: session.user?.id,
     });
     await db.update(assets).set({ status: "service" }).where(eq(assets.id, id));
 
@@ -71,21 +71,22 @@ export async function PATCH(
     if (existingService.length > 0) {
       const serviceId = existingService[0].id;
 
-      await db
-        .update(assetService)
-        .set({
-          remark,
-          servicePrice,
-          receivedOn:new Date(receivedOn),
-          image,
-          updatedAt: sql`now()`,
-        })
-        .where(eq(assetService.id, serviceId));
-
-      await db
-        .update(assets)
-        .set({ status: "available" })
-        .where(eq(assets.id, id));
+      await db.transaction(async (tx) => {
+        await tx
+          .update(assetService)
+          .set({
+            remark,
+            servicePrice,
+            receivedOn: new Date(receivedOn),
+            image,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(assetService.id, serviceId));
+        await tx
+          .update(assets)
+          .set({ status: "available" })
+          .where(eq(assets.id, id));
+      });
 
       return NextResponse.json(
         { message: "Service marked as completed" },

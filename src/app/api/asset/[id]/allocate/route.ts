@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { assetAssignment } from "@/db/schema";
+import { assetAssignment, assets } from "@/db/schema";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -27,12 +27,20 @@ export async function POST(
       );
     }
     const { employeeId, assignedDate } = await req.json();
-    await db.insert(assetAssignment).values({
-      assetId: id,
-      employeeId,
-      assignedOn: assignedDate,
-      assignedById: session.user?.id,
+    await db.transaction(async (tx) => {
+      await tx.insert(assetAssignment).values({
+        assetId: id,
+        employeeId,
+        assignedOn: assignedDate,
+        assignedById: session.user?.id,
+      });
+
+      await tx
+        .update(assets)
+        .set({ status: "assigned" })
+        .where(eq(assets.id, id));
     });
+
     return NextResponse.json({ message: "Asset Allocated Successfully" });
   } catch (e) {
     console.log(e);
@@ -58,14 +66,24 @@ export async function PATCH(
       return NextResponse.json({ message: "Required Fields" }, { status: 400 });
     }
 
-    await db
-      .update(assetAssignment)
-      .set({
-        returnedOn: returnOn,
-        returnReason,
-        updatedAt: sql`now()`,
-      })
-      .where(eq(assetAssignment.assetId, id));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(assetAssignment)
+        .set({
+          returnedOn: returnOn,
+          returnReason,
+          updatedAt: sql`now()`,
+        })
+        .where(eq(assetAssignment.assetId, id));
+
+      await tx
+        .update(assets)
+        .set({
+          status: "available",
+        })
+        .where(eq(assets.id, id));
+    });
+
     return NextResponse.json(
       { message: "Retrieved Successfully" },
       { status: 200 }
