@@ -1,12 +1,20 @@
-import { auth } from "@/auth"; // your auth util
-import { db } from "@/db"; // your drizzle instance
+import { auth } from "@/auth";
+import { db } from "@/db";
 import { assets } from "@/db/schema";
-import { eq, ne } from "drizzle-orm";
+import { NextResponse } from "next/server";
 
-import { NextRequest, NextResponse } from "next/server";
-export const GET = auth(async function (req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const query = searchParams.get("q");
+const initialAssetCount: Record<string, number> = {
+  laptop: 0,
+  monitor: 0,
+  hardisk: 0,
+  pendrive: 0,
+  mobile: 0,
+  sim: 0,
+  ram: 0,
+  accessories: 0,
+};
+
+export const GET = auth(async function () {
   const session = await auth();
 
   if (!session) {
@@ -14,65 +22,45 @@ export const GET = auth(async function (req: NextRequest) {
   }
 
   try {
-    const initialAssetCount: Record<string, number> = {
-      laptop: 0,
-      monitor: 0,
-      hardisk: 0,
-      pendrive: 0,
-      mobile: 0,
-      sim: 0,
-      ram: 0,
-      accessories: 0,
+    const allAssets = await db.select().from(assets);
+
+    const summary = {
+      total: allAssets.length,
+      assigned: allAssets.filter((asset) => asset.status !== "available")
+        .length,
+      available: allAssets.filter((asset) => asset.status === "available")
+        .length,
     };
 
-    if (query === "total" || query === ""||query===null) {
-      const allAssets = await db.select().from(assets);
-      const assetCountByType = allAssets.reduce(
-        (acc, asset) => {
-          acc[asset.type] = (acc[asset.type] || 0) + 1;
-          return acc;
-        },
-        { ...initialAssetCount }
-      );
+    const assignedAssets = allAssets.filter(
+      (asset) => asset.status !== "available"
+    );
+    const availableAssets = allAssets.filter(
+      (asset) => asset.status === "available"
+    );
 
-      return NextResponse.json({
-        totalCount: allAssets.length,
-        assetCountByType,
-      });
-    } else if (query === "available") {
-      const allAssets = await db
-        .select()
-        .from(assets)
-        .where(eq(assets.status, query));
-      const assetCountByType = allAssets.reduce(
-        (acc, asset) => {
-          acc[asset.type] = (acc[asset.type] || 0) + 1;
-          return acc;
+    const countByType = (assetsList: typeof allAssets) => {
+      return assetsList.reduce(
+        (counts, asset) => {
+          if (asset.type in counts) {
+            counts[asset.type]++;
+          }
+          return counts;
         },
         { ...initialAssetCount }
       );
+    };
 
-      return NextResponse.json({
-        totalCount: allAssets.length,
-        assetCountByType,
-      });
-    } else if(query==="assigned"){
-      const allAssets = await db
-        .select()
-        .from(assets)
-        .where(ne(assets.status, "available"));
-      const assetCountByType = allAssets.reduce(
-        (acc, asset) => {
-          acc[asset.type] = (acc[asset.type] || 0) + 1;
-          return acc;
-        },
-        { ...initialAssetCount }
-      );
-      return NextResponse.json({
-        totalCount: allAssets.length,
-        assetCountByType,
-      });
-    }
+    const response = {
+      summary,
+      data: {
+        all: countByType(allAssets),
+        assigned: countByType(assignedAssets),
+        available: countByType(availableAssets),
+      },
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Dashboard API error:", error);
     return NextResponse.json(

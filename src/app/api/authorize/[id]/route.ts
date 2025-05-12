@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { authorizedUsers, sessions, users } from "@/db/schema";
+import { authorizedUsers } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -14,24 +14,30 @@ export async function DELETE(
   }
 
   try {
-    const { id } = await params;
-    const [{ email }] = await db
-      .select({ email: authorizedUsers.email })
-      .from(authorizedUsers)
-      .where(eq(authorizedUsers.id, id));
+    const { id } = params;
+    console.log(id);
 
-    const [{ id: uuid }] = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, email));
+    await db.transaction(async (tx) => {
+      // const [{ email }] = await tx
+      //   .select({ email: authorizedUsers.email })
+      //   .from(authorizedUsers)
+      //   .where(eq(authorizedUsers.id, id));
 
-    await db.delete(sessions).where(eq(sessions.userId, uuid));
+      // console.log(email);
+      // if (email) {
+      //   const [{ id: uuid }] = await tx
+      //     .select({ id: users.id })
+      //     .from(users)
+      //     .where(eq(users.email, email));
+      //   if (uuid) await tx.delete(sessions).where(eq(sessions.userId, uuid));
+      // }
 
-    await db
-      .update(authorizedUsers)
-      .set({ deletedAt: sql`now()`, deletedById: session!.user?.id })
-      .where(eq(authorizedUsers.id, id));
-      
+      await tx
+        .update(authorizedUsers)
+        .set({ deletedAt: sql`now()`, deletedById: session.user?.id })
+        .where(eq(authorizedUsers.id, id));
+    });
+
     return NextResponse.json(
       { message: "User Deleted Successfully" },
       { status: 200 }

@@ -1,15 +1,12 @@
-'use client'
-
 import Sidebar from "@/components/Sidebar";
-import { Box } from "@mui/material";
 import React, { ReactNode } from "react";
 
 function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <Box sx={{ display: "flex" }}>
+    <div className="flex">
       <Sidebar />
       {children}
-    </Box>
+    </div>
   );
 }
 

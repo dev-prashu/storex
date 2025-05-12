@@ -14,8 +14,12 @@ export const GET = auth(async function (req) {
       .select()
       .from(authorizedUsers)
       .where(isNull(authorizedUsers.deletedAt));
+    const count = users.length;
 
-    return NextResponse.json({ authorizedUsers: users }, { status: 200 });
+    return NextResponse.json(
+      { authorizedUsers: users, count: users ? count : 0 },
+      { status: 200 }
+    );
   } catch (e) {
     console.log(e);
     return NextResponse.json(
